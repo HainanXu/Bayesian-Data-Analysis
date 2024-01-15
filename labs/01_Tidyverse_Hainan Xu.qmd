@@ -93,8 +93,9 @@ $$
 where $y_i$ is the mortality rate of the whole population in Ontario in 2000, $x_i$ is the age, $\epsilon_i\sim (0,\sigma^2)$. According to the model summary shown below, the coefficient on age $\beta_1$ is 0.084, which means on average, the mortality rate increases $8.4\%$ for one year increase in age.
 
 ```{r}
-dm$Age=as.numeric(dm$Age)
-dm5<- dm |> filter(Year ==2000, Age < 106) |> na.omit()
+dm5<- dm |> mutate(Age=as.numeric(Age)) |> 
+  filter(Year ==2000, Age < 106)|> 
+  na.omit()
 model<-lm(log(Total) ~ Age, data= dm5)
 summary(model)
 ```
