@@ -78,7 +78,7 @@ ggplot(dm4.1)+
   scale_color_manual(
     values = c("Female_Average" = "pink", "Male_Average" = "blue"),
     labels = c("Female", "Male")) +
-  labs(title = "The Average Motality Rate from 1921 - 2019", y="Average Mortality Rate")+
+  labs(title = "The Average Mortality Rate from 1921 - 2019", y="Average Mortality Rate")+
     theme_bw()
 ```
 
@@ -92,10 +92,10 @@ $$
 
 where $y_i$ is the mortality rate of the whole population in Ontario in 2000, $x_i$ is the age, $\epsilon_i\sim (0,\sigma^2)$. According to the model summary shown below, the coefficient on age $\beta_1$ is 0.084, which means on average, the mortality rate increases $8.4\%$ for one year increase in age.
 
-```{r}
-dm5<- dm |> mutate(Age=as.numeric(Age)) |> 
-  filter(Year ==2000, Age < 106)|> 
-  na.omit()
+```{r warning=FALSE}
+dm5<- dm |>
+  mutate(Age=as.numeric(Age))|>
+  filter(Year ==2000, as.numeric(Age) < 106)
 model<-lm(log(Total) ~ Age, data= dm5)
 summary(model)
 ```
