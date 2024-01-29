@@ -17,7 +17,6 @@ For this week, I would like you to save this .qmd file to your class repo, then 
 
 Consider the happiness example from the lecture, with 118 out of 129 women indicating they are happy. We are interested in estimating $\theta$, which is the (true) proportion of women who are happy. Calculate the MLE estimate $\hat{\theta}$ and 95% confidence interval.
 
-
 The mle estimate for $\hat{\theta}$ is 0.9147287, and the 95% CI is (0.8665329 0.9629244).
 
 ```{r}
@@ -57,6 +56,7 @@ credible_interval
 Now assume a Beta(10,10) prior on $\theta$. What is the interpretation of this prior? Are we assuming we know more, less or the same amount of information as the prior used in Question 2?
 
 The interpretation of this prior is: We think the the unknown parameter $\theta$ that underlies our data as the outcome of a random variable whose distribution follows Beta(10,10). We are assuming we know more information compared with the prior used in question 2.
+
 ```{r}
 a.prior <- 10
 b.prior <- 10
@@ -68,17 +68,17 @@ posterior_mean
 credible_interval
 ```
 
-
 ## Question 4
+
 Create a graph in ggplot which illustrates
 
 -   The likelihood (easiest option is probably to use `geom_histogram` to plot the histogram of appropriate random variables)
 -   The priors and posteriors in question 2 and 3 (use `stat_function` to plot these distributions)
 
-The figure below strenthen our statement in question 3.
-The mean of the two priors are the same, but there are some differences for our priors. In question 2, the prior beta(1,1) is equivalent to uniform(0,1), indicating all values between 0 to 1 are equal likely. The beta(10,10) is more concentrated at the mean 0.5, indicating we are have stronger belief that the mean is around 0.5.
+The figure below strenthen our statement in question 3. The mean of the two priors are the same, but there are some differences for our priors. In question 2, the prior beta(1,1) is equivalent to uniform(0,1), indicating all values between 0 to 1 are equal likely. The beta(10,10) is more concentrated at the mean 0.5, indicating we are have stronger belief that the mean is around 0.5.
 
 As aresult, the posterior of beta(10,10) has a mean that is more close to 0.5 compared with the posterior of beta(1,1).
+
 ```{r}
 #histogram 
 set.seed(123)
@@ -100,8 +100,6 @@ geom_bar(aes(x = x, y = y,fill = "likelihood"), stat = "identity")+
   scale_color_brewer(palette = "Paired",name = "Priors and Posteriors")+
   scale_fill_discrete(name = "") + theme_bw() 
 ```
-
-
 
 ## Question 5
 
@@ -126,7 +124,6 @@ Given two prior distributions for $\theta$ (explaining each in a sentence):
 
 -   A subjective/informative prior based on your best knowledge
 
-
-A noninformative prior could be uniform(-1,1), a distribution that indicates the average improvement in success probability are neural between -1 and 1. Without useful information, the performance after practice could be decreasing or increasing. 
+A noninformative prior could be uniform(-1,1), a distribution that indicates the average improvement in success probability are neural between -1 and 1. Without useful information, the performance after practice could be decreasing or increasing.
 
 An informative prior could be beta(5,5). This is because from my prior experence, I believe constant practices contributes to the improvement of success probability. There are also some scientific papers that could side prove this.
