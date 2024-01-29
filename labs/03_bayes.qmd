@@ -75,7 +75,10 @@ Create a graph in ggplot which illustrates
 -   The likelihood (easiest option is probably to use `geom_histogram` to plot the histogram of appropriate random variables)
 -   The priors and posteriors in question 2 and 3 (use `stat_function` to plot these distributions)
 
-The mean of the two priors are the same. In question 2, the prior beta(1,1) is equivalent to uniform(0,1), indicating all values between 0 to 1 are equal likely. The beta(10,10) is more concentrated at the mean 0.5, indicating we are have stronger belief that the mean is around 0.5.
+The figure below strenthen our statement in question 3.
+The mean of the two priors are the same, but there are some differences for our priors. In question 2, the prior beta(1,1) is equivalent to uniform(0,1), indicating all values between 0 to 1 are equal likely. The beta(10,10) is more concentrated at the mean 0.5, indicating we are have stronger belief that the mean is around 0.5.
+
+As aresult, the posterior of beta(10,10) has a mean that is more close to 0.5 compared with the posterior of beta(1,1).
 ```{r}
 #histogram 
 set.seed(123)
@@ -87,14 +90,14 @@ k <- seq(0, n2)
 
 data <- data.frame(x = seq(0,1,0.01),k = k, y = dbinom(k, n2, y / n))
 ggplot(data) +
-geom_bar(aes(x = x, y = y), stat = "identity", fill = "pink", color = "pink")+
+geom_bar(aes(x = x, y = y,fill = "likelihood"), stat = "identity")+
   stat_function(fun = dbeta, args = list(shape1 = 1, shape2 = 1), aes(color = "Prior of beta(1,1)")) + 
   stat_function(fun = dbeta, args = list(shape1 = y+1, shape2 = n-y+1), aes(color = "Posterior beta(1,1)")) + 
     stat_function(fun = dbeta, args = list(shape1 = 10, shape2 = 10), aes(color = "Prior of beta(10,10) ")) + 
   stat_function(fun = dbeta, args = list(shape1 = y+10, shape2 = 10+n-y), aes(color = "Posterior of beta(10,10)")) +
   xlab("theta values")+
   ylab("") +
-  scale_color_brewer(palette = "Paired", name = "distribution")+
+  scale_color_brewer(palette = "Paired",name = "Priors and Posteriors")+
   scale_fill_discrete(name = "") + theme_bw() 
 ```
 
@@ -126,4 +129,4 @@ Given two prior distributions for $\theta$ (explaining each in a sentence):
 
 A noninformative prior could be uniform(-1,1), a distribution that indicates the average improvement in success probability are neural between -1 and 1. Without useful information, the performance after practice could be decreasing or increasing. 
 
-An informative prior could be beta(5,5). This is because from my prior experence, I believe the constant practices contributes to the improvement of success probability.
+An informative prior could be beta(5,5). This is because from my prior experence, I believe constant practices contributes to the improvement of success probability. There are also some scientific papers that could side prove this.
