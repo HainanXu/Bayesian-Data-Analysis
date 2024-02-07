@@ -45,7 +45,7 @@ delay_2022 |>
 
 **2. Restrict the `delay_2022` to delays that are greater than 0 and to only have delay reasons that appear in the top 50% of most frequent delay reasons. Perform a regression to study the association between delay minutes, and two covariates: line and delay reason. It's up to you how to specify the model, but make sure it's appropriate to the data types. Comment briefly on the results, including whether results generally agree with the exploratory data analysis above.**
 
-Below are the top 50% of the most frequent delay reasons.
+Below are the top 5 most frequent delay reasons. 
 
 ```{r}
 #top 50% of most frequent delay reasons
@@ -69,8 +69,9 @@ top_delay_reasons<- delay_2022|>
   filter(rank<= 0.5) |> 
   select(code_red)
 
+
 #filter delay_2022
-q2<-delay_2022|>filter(min_delay>0, code_red %in% top_delay_reasons$code_red)
+q2<-delay_2022|>filter(min_delay>0 , code_red %in% top_delay_reasons$code_red)
 #fit the model
 model<-lm(min_delay~line + code_red, data=q2)
 summary(model)
