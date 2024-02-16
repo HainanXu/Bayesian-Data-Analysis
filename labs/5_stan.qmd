@@ -169,15 +169,10 @@ The the intercept term for linear regression is estimated as 77.548, while for b
 fit.lm<-lm(kid_score~mom_hs,data=kidiq)
 summary(fit.lm)
 ```
+
 ```{r}
 fit2
 ```
-In addition, the variance estimated from the bayes regression is 20.27. The variance for `lm()` is 19.85, which is similat to the variance estimated from bayes regression as well.
-```{R}
-sigma2 <- sqrt(sum(fit.lm$residuals^2) / (length(y) - 2))
-sigma2
-```
-
 
 
 b)  Do a `pairs` plot to investigate the joint sample distributions of the slope and intercept. Comment briefly on what you see. Is this potentially a problem?
