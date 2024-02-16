@@ -1,0 +1,263 @@
+---
+title: "Week 5: Bayesian linear regression and introduction to Stan"
+date: today
+author: Hainan Xu
+date-format: "DD/MM/YY"
+format: pdf
+
+execute: 
+  warning: false
+  message: false
+---
+```{r}
+library(tidyverse)
+library(rstan) 
+library(tidybayes)
+library(here)
+```
+
+```{r}
+kidiq <- readRDS("~/Documents/2024/STA2201-Methods-of-Applied-Statistics/labs/kidiq.RDS")
+```
+## Question 1
+
+Use plots or tables to show three interesting observations about the data. Remember:
+
+-   Explain what your graph/ tables show
+-   Choose a graph type that's appropriate to the data type
+
+
+The scatterplot below shows the relationships between kid's score and mom's IQ, we observe that the kid's score and mom's IQ seems to have a positive relationship. 
+```{r}
+#relation ship between kids' score and mother's IQ
+ggplot(data=kidiq)+geom_point(aes(x=mom_iq,y=kid_score),fill="lightblue")+theme_bw()+ggtitle("Relationships between Kid's Score and Mother's IQ")
+```
+
+The boxplot below shows the distribution of kids kid's score catergorized by whether or not the mom is graduated from highschool. We observe that the mean of kid's IQ whose graduated from highschool is higher than that of not graduated from highschool.
+```{r}
+# relationships between kids'score and whether or not mother complete the high school
+ggplot(data=kidiq)+geom_boxplot(aes(x=as.factor(mom_hs),y=kid_score,color=as.factor(mom_hs)))+theme_bw()+ggtitle("Kids's Score vs Whether or not mother complete the high school")+ labs(color = "mom graduated from high school")
+```
+The boxplot below shows the distribution of mom's iq catergrized by whether or not the shei s graduated from highschool. We observe that the mean of mom's IQ who graduated from highschool is higher than that of not graduated from highschool. Interestingly, fomr the given data, we observe that the IQ of the highschool graduated mom can still be lower than those who did not graduate from highschool.
+
+```{r}
+#relationships between mom's IQ and whether or not they completed high school
+ggplot(data=kidiq)+geom_boxplot(aes(x=as.factor(mom_hs),y=mom_iq,color=as.factor(mom_hs)))+theme_bw()+ggtitle("Mom's IQ vs Whether or not Mom completed the highschool ")+labs(color = "Mom graduated from high school")+xlab("Mom graduated from highschool or not")+ylab("Mom's IQ")
+```
+## Original Model
+In order to compare the density plot as required in question2, we keep original model fitted with `sigma0=01`.
+```{r}
+y <- kidiq$kid_score
+mu0 <- 80
+sigma0 <- 10
+
+# named list to input for stan function
+data <- list(y = y, 
+             N = length(y), 
+             mu0 = mu0,
+             sigma0 = sigma0)
+```
+
+Now we can run the model:
+
+```{r results='hide'}
+fit <- stan(file = here("labs/kids2.stan"),
+            data = data,
+            chains = 3,
+            iter = 500)
+```
+
+
+```{r}
+dsamples <- fit  |> 
+  gather_draws(mu, sigma) # gather = long format
+dsamples
+
+dsamples |> 
+  filter(.variable == "mu") |> 
+  ggplot(aes(.value, color = "posterior")) + geom_density(size = 1) + 
+  xlim(c(70, 100)) + 
+  stat_function(fun = dnorm, 
+        args = list(mean = mu0, 
+                    sd = sigma0), 
+        aes(colour = 'prior'), size = 1) +
+  scale_color_manual(name = "", values = c("prior" = "red", "posterior" = "black")) + 
+  ggtitle("Prior and posterior for mean test scores") + 
+  xlab("score")
+  
+```
+
+## Question 2
+
+Change the prior to be much more informative (by changing the standard deviation to be 0.1). Rerun the model. Do the estimates change? Plot the prior and posterior densities.
+
+The estimates changed after changing the standard deviation as follows.`mu` decreased from 86 to around 80. `sigma` increased from 20 to 21.
+```{r}
+y <- kidiq$kid_score
+mu0 <- 80
+sigma0 <- 0.1
+
+# named list to input for stan function
+data <- list(y = y, 
+             N = length(y), 
+             mu0 = mu0,
+             sigma0 = sigma0)
+```
+
+```{r results='hide'}
+#check the model fit
+fit <- stan(file = here("~/Documents/2024/STA2201-Methods-of-Applied-Statistics/labs/kids2.stan"),
+            data = data,
+            chains = 3,
+            iter = 500)
+```
+
+```{r}
+fit
+```
+
+```{r}
+dsamples<-fit  |> 
+  gather_draws(mu, sigma) 
+
+dsamples |> 
+filter(.variable == "mu") |> 
+ggplot(aes(.value, color = "posterior")) + geom_density(size = 1) + 
+xlim(c(70, 100)) + 
+stat_function(fun = dnorm, 
+      args = list(mean = mu0, 
+                  sd = sigma0), 
+      aes(colour = 'prior'), size = 1) +
+scale_color_manual(name = "", values = c("prior" = "red", "posterior" = "black")) + 
+ggtitle("Prior and posterior for mean test scores") + 
+xlab("score")
+
+```
+
+
+# Adding covariates
+
+Now let's see how kid's test scores are related to mother's education. We want to run the simple linear regression
+
+$$
+Score = \alpha + \beta X
+$$ where $X = 1$ if the mother finished high school and zero otherwise.
+
+`kid3.stan` has the stan model to do this. Notice now we have some inputs related to the design matrix $X$ and the number of covariates (in this case, it's just 1).
+
+Let's get the data we need and run the model.
+
+```{r results='hide'}
+X <- as.matrix(kidiq$mom_hs, ncol = 1) # force this to be a matrix
+K <- 1
+
+data <- list(y = y, N = length(y), 
+             X =X, K = K)
+fit2 <- stan(file = here("labs/kids3.stan"),
+            data = data, 
+            iter = 1000)
+```
+
+## Question 3
+
+a)  Confirm that the estimates of the intercept and slope are comparable to results from `lm()`
+
+To show that the estimates of the intercept and slope are comparable for the results from `lm()`, we first fit a model using `lm()`. Then, we compare the fitted model with the `fit2` obtained from the bayes regression.
+
+The the intercept term for linear regression is estimated as 77.548, while for bayes regression we have 77.96 as the mean intercept. The two values only differed by 0.412. Given the scale of the data, the means are comparable. We then look at the coefficient term for `mom_hs`. The coefficient for `lm()` is 11.771, for bayes regressoin, the coefficient is 11.25. The second one is just slightly greater than the one estimated from linear models. In addition, the estimated standard errors of these coefficients are similar as well. Thus, the results of the two models are comparable.
+```{r}
+fit.lm<-lm(kid_score~mom_hs,data=kidiq)
+summary(fit.lm)
+```
+```{r}
+fit2
+```
+In addition, the variance estimated from the bayes regression is 20.27. The variance for `lm()` is 19.85, which is similat to the variance estimated from bayes regression as well.
+```{R}
+sigma2 <- sqrt(sum(fit.lm$residuals^2) / (length(y) - 2))
+sigma2
+```
+
+
+
+b)  Do a `pairs` plot to investigate the joint sample distributions of the slope and intercept. Comment briefly on what you see. Is this potentially a problem?
+
+From the pairs plot below, we observe a negative correlation between the intercept and the coefficient. This may not potentially be a problem, since in linear regression, $\hat\beta_0=\bar{y}-\hat\beta_1\bar{x}$, indicating the increase coefficient, the other one decreases.
+
+```{r}
+pairs(fit2, pars = c("alpha","beta[1]"))
+```
+## Question 4
+
+Add in mother's IQ as a covariate and rerun the model. Please mean center the covariate before putting it into the model. Interpret the coefficient on the (centered) mum's IQ.
+
+```{r results='hide'}
+kidiq$mom_iq_centered <- kidiq$mom_iq - mean(kidiq$mom_iq)
+
+X <- as.matrix(kidiq[, c("mom_hs", "mom_iq_centered")]) 
+K <- 2
+
+data3 <- list(y = y,
+            N = length(y),
+            X = X,
+            K = K
+)
+fit3 <- stan(file = here("labs/kids3.stan"),
+             data = data3,
+             iter = 1000)
+```
+```{r}
+fit3
+```
+The coefficient of the centered mom’s IQ is estimated as 0.56. This value indicates that, if we keep other variables the same, on average, an unit increase in the mom's IQ increases the kids' score by 0.56.
+
+
+## Question 5
+
+Confirm the results from Stan agree with `lm()`
+
+From the output below, we observe that, the centered mom’s IQ from `lm()` is estimated as 0.56 as well, with aligns with our bayes regression estimate.
+
+```{r}
+fit3.lm <- lm(kid_score ~ mom_hs + mom_iq_centered, data=kidiq)
+summary(fit3.lm)
+```
+
+## Question 6
+
+Plot the posterior estimates of scores by education of mother for mothers who have an IQ of 110.
+
+
+From density plot below, we observe that, for moms who have an IQ of 110, if the moms did not graduate from high school, their kids' IQ is approximately nornally distributed with mean around 87, if the moms has graduated from highschool, the disribution of their kids IQ has a mean around 93.
+```{r}
+posterior_samples <- extract(fit3)
+b0=posterior_samples$alpha
+b1=posterior_samples$beta[,1]
+b2=posterior_samples$beta[,2]
+e=posterior_samples$sigma
+
+posterior.hs0=b0+b2*(110-mean(kidiq$mom_iq))
+posterior.hs1=b0+b1+b2*(110-mean(kidiq$mom_iq))
+
+density<- data.frame(
+  Scores = c(posterior.hs0, posterior.hs1),
+  Highschool = rep(c("mom_hs=0", "mom_hs=1"), each = length(posterior.hs0)))
+
+ggplot(density, aes(x = Scores, fill = Highschool)) +
+  geom_density(alpha = 0.5) +
+  labs(title = "Density Plots of Posterior Scores by Highschool",x = "Scores", y = "Density") + scale_fill_manual(values = c("blue", "red"))+theme_bw()
+#a<-density|> filter(Highschool=="mom_hs=1")
+#a$Scores |>mean()
+```
+
+## Question 7
+
+Generate and plot (as a histogram) samples from the posterior predictive distribution for a new kid with a mother who graduated high school and has an IQ of 95.
+
+We observe that the estimated kids IQ are approximately normally distributed with a mean around 103 .
+```{r}
+posterior.hs1.95=b0+b1+b2*(95-mean(kidiq$mom_iq))+e
+ 
+ggplot()+geom_histogram(aes(x=posterior.hs1.95),fill="lightblue")+theme_bw()+labs(x="IQ",title="Distribution of kids' IQ whose mother graduated from high school and has an IQ of 95")
+
+```
